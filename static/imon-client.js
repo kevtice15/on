@@ -23,7 +23,7 @@ $(document).ready(function(){
 function UserPanelCtrl($scope, $http){
 	$http.get("/users/8").success(function(result){
 		console.log(result);
-		$scope.userName = result.data.first_name + " " + result.data.last_name;
+		$scope.user = result.data;
 	});
 }
 
@@ -37,24 +37,10 @@ function RecentSongsCtrl($scope, $http){
 
 function UserGroupsCtrl($scope, $http, $window, $document){
 	$http.get("/groups/8").success(function(result){
-		console.log(result);
 		$scope.groups = result.data;
+		console.log("user group controller: ", $scope.groups);
 	});
 
-
-	// function populateActivity(i){
-	// 	if(i < $scope.groups.length){
-	// 		$http.get("/activity", {
-	// 			params: {group_id: i}}).success(function(result){
-	// 			$scope.groups[i].activity = result.data;
-	// 			console.log(result);
-	// 			i++;
-	// 			populateActivity(i);
-	// 		});
-	// 	}
-	// }
-
-	// populateActivity(0);
 
 	$scope.handleNewSong = function($event, song, group){
 		//POST new song to server and make button have success and be disabled

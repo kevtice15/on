@@ -25,14 +25,15 @@
   		<div class="col-md-3">
   			<div class="panel panel-default" ng-controller="UserPanelCtrl">
   				<div class="panel-body">
-    				{{userName}}
+    				<img src="{{user.image}}" class="profile-image"/>
+    				<p>{{user.username}}</p>
   				</div>
 				</div>
 				<div class="panel panel-default" ng-controller="RecentSongsCtrl">
 					<div class="panel-heading">My Songs</div>
   				<div class="panel-body">
     				<ul class="list-group">
-						  <li class="list-group-item" ng-repeat="song in songs">{{song.user.first_name + ' ' + song.user.last_name + ' added ' + song.song.title + ' to ' + song.group.title}}</li>
+						  <li class="list-group-item" ng-repeat="song in songs">{{song.user.first_name + ' ' + song.user.last_name + ' added ' + song.song.title + ' by ' + song.song.artist + ' to ' + song.group.title}}</li>
 						</ul>
   				</div>
 				</div>
@@ -68,7 +69,7 @@
 						<div class="list-group">
 						  <a href="#" class="list-group-item" ng-repeat="activity in group.activity">
 						    <h4 class="list-group-item-heading"></h4>
-						    <p class="list-group-item-text">{{group.activity.user.first_name}} added {{group.activity.song.title}}</p>
+						    <p class="list-group-item-text">{{activity.user.first_name + ' added ' + activity.song.title + ' by ' + activity.song.artist}}</p>
 						    <p class="list-group-item-text"></p>
 						  </a>
 						</div>
