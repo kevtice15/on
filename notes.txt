@@ -1,0 +1,34 @@
+users
+	id user_id
+	string first name
+	string last name
+	string password
+
+songs
+	id song_id
+	string title
+	string artist
+	string album
+
+user_songs
+	id user_id
+	id song_id
+
+groups
+	id group_id
+	string title
+
+group_members
+	id group_id
+	id user_id
+
+group_songs
+	id group_id
+	id song_id
+
+
+activity_item
+	id activity_item_id
+	FK id group_id
+	FK id action_user_id
+	FK id action
