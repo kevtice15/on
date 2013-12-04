@@ -1,13 +1,156 @@
-var express = require('express'),
-  app = express(),
-  mongodb = require('mongodb'),
-  mongoose = require('mongoose'),
-  passport = require('passport'),
-  TwitterStrategy = require('passport-twitter').Strategy,
-  http = require('http'),
-	https = require('https'),
-	imon = require('./imon');
+var express = require('express');
 
+var app = express();
+
+var http = require('http');
+var https = require('https');
+
+var RedisStore = require('connect-redis')(express);
+
+var mongodb = require('mongodb');
+var mongoose = require('mongoose');
+
+var passport = require('passport');
+var TwitterStrategy = require('passport-twitter').Strategy;
+
+var TWITTER_CONSUMER_KEY = "0GOReNaXWXCTpf7OQgrg";
+var TWITTER_CONSUMER_SECRET = "0wA8yUBrXz3ivpTHcuBbKp3vGN2ODnOF7iFM9DB48Y";
+var TWITTER_CALLBACK_URL = "http://127.0.0.1:8888/auth/twitter/callback";
+
+
+var imon = require('./imon');
+var users = require("./models/user");
+var group = require('./models/group');
+var song = require('./models/song');
+var album = require('./models/album');
+var activity_item = require('./models/activity_item');
+
+
+passport.serializeUser(function(user, done) {
+	console.log("SERIALIZE: ", user.id);
+	//TODO Serialize user.id
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(obj, done) {
+	//TODO Deserialize user find by twitter id
+	var User = mongoose.model('User');
+	User.findOne({_id: obj}, function(err, foundUser){
+		if(err){
+			return done(err);
+		}
+		console.log("DESERIALIZE: ", foundUser);
+		done(null, foundUser);
+  });
+});
+
+
+passport.use(new TwitterStrategy({
+		consumerKey: TWITTER_CONSUMER_KEY,
+    consumerSecret: TWITTER_CONSUMER_SECRET,
+    callbackURL: TWITTER_CALLBACK_URL
+  },
+  function(token, tokenSecret, profile, done) {
+		console.log("This gets called?");
+		function sanitizeImgURL(string){
+			return string.replace("_normal", "");
+		}
+
+		console.log("profile: ", profile);
+		process.nextTick(function(){
+			var User = mongoose.model('User');
+			User.findOne({twitter_id: profile.id}, function(err, foundUser){
+				if(err){
+					return done(err);
+				}
+				if(foundUser){
+					console.log("FOUND THE USER++++++++++++++++++++++++");
+					return done(null, foundUser);
+				}
+				console.log("NEW PROF ID", profile.id);
+				var newUser = new User({
+					twitter_id: profile.id,
+					username: profile.username,
+					displayName: profile.displayName,
+					email: profile.email,
+					imageUrl: sanitizeImgURL(profile._json.profile_image_url)
+				});
+				newUser.save(function(err){
+					if(err){
+						console.log("ERROR - Cannot save new user");
+					}
+				});
+				return done(null, newUser);
+			});
+		});
+  })
+);
+
+		// 	User.find({account: {id: profile.id}}, function(err, user) {
+		// 		if(err){
+		// 			return done(err);
+		// 		}
+		// 		if(!user){
+		// 			return done(null, false, { message: 'Incorrect password.' });
+		// 		}
+		// 		else if(user){
+		// 			done(null, user);
+		// 		}
+		// 		var newUser = new User(
+		// 			{account:
+		// 				{provider: profile.provider,
+		// 				id: profile.id},
+		// 			username: profile.username,
+		// 			displayName: profile.displayName,
+		// 			email: profile.email,
+		// 			image: sanitizeImgURL(profile._json.profile_image_url)
+		// 		});
+		// 	});
+// 		// 	return done(null, profile);
+// 		// });
+//   }
+// ));
+
+
+
+app.set('env', 'development');
+
+console.log("app.get('env') =", app.get('env'));
+console.log(app.get('env') === 'development');
+
+// development only
+if (app.get('env') === 'development') {
+	app.configure(function(){
+		app.set('views', __dirname + '/views');
+		app.set('port', 8888);
+		app.use(express.logger('dev'));
+		app.use(express.methodOverride());
+		app.use(express.cookieParser());
+		app.use(express.bodyParser());
+		app.use(express.session({secret: "elsecreto"}));
+		// app.use(express.session({
+		// 	store: new RedisStore({
+		// 		host: 'localhost',
+		// 		port: 6379,
+		// 		db: 2,
+		// 		pass: 'RedisPASS'
+		// 	}),
+		// 	secret: '1234567890'
+		// }));
+		app.use(passport.initialize());
+		app.use(passport.session());
+		app.use(express.errorHandler());
+		app.use(app.router);
+	});
+}
+
+// production only
+if (app.get('env') === 'production') {
+  // TODO
+}
+
+
+// all environments
 
 
 mongoose.connect('mongodb://localhost/test');
@@ -17,93 +160,14 @@ db.once('open', function callback () {
   console.log('Connected to DB');
 });
 
- var twitterUserSchema = new mongoose.Schema({
-      account: { provider: String,
-                 id: String},
-      username: String,
-      name: String,
-      displayName: String,
-			email: String,
-			image: String
-  });
-
-var twitterUser= mongoose.model('twitterUser', twitterUserSchema);
-var twitterUserInstance = new twitterUser;
-
-
-
-
-
-// all environments
-app.set('views', __dirname + '/views');
-app.use(express.logger('dev'));
-app.use(express.bodyParser());
-app.use(express.methodOverride());
-app.use(express.cookieParser());
-app.use(express.session({ cookie: { maxAge: 60000 }, secret: 'keyboard cat' }));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(app.router);
-
-
-
-// development only
-if (app.get('env') === 'development') {
-  app.use(express.errorHandler());
-}
-
-// production only
-if (app.get('env') === 'production') {
-  // TODO
-}
-
-passport.serializeUser(function(user, done) {
-	console.log("SERIALIZE: ", user);
-  done(null, user);
-});
-
-passport.deserializeUser(function(obj, done) {
-	console.log("DESERIALIZE: ", obj);
-  done(null, obj);
-});
-
-
-
-passport.use(new TwitterStrategy({
-    consumerKey: "0GOReNaXWXCTpf7OQgrg",
-    consumerSecret: "0wA8yUBrXz3ivpTHcuBbKp3vGN2ODnOF7iFM9DB48Y",
-    callbackURL: "http://127.0.0.1:8888/auth/twitter/callback"
-  },
-  function(token, tokenSecret, profile, done) {
-		function sanitizeImgURL(string){
-			return string.replace("_normal", "");
-		}
-
-		console.log("profile: ", profile);
-		process.nextTick(function(){
-			twitterUser.find({account: {id: profile.id}}, function(err, user) {
-      if (err) { return done(err); }
-      if(!user){
-				return done(null, false, {message: "No user found."});
-      }
-      var newUser = new twitterUser(
-				{account:
-					{provider: profile.provider,
-					id: profile.id},
-				username: profile.username,
-				displayName: profile.displayName,
-				email: profile.email,
-				image: sanitizeImgURL(profile._json.profile_image_url)
-			});
-			return done(null, newUser);
-			});
-		});
-  }
-));
 
 /**
  * Routes
  */
+
+var routes = require('./routes')(app);
+
+
 
 // Redirect the user to Twitter for authentication.  When complete, Twitter
 // will redirect the user back to the application at
@@ -120,21 +184,6 @@ app.get('/auth/twitter/callback',
 
 
 
-app.get("/static/:filename", function(request, response){
-	response.sendfile("static/" + request.params.filename);
-});
-
-app.get("/static/bootstrap/css/:filename", function(request, response){
-	response.sendfile("static/bootstrap/css/" + request.params.filename);
-});
-
-app.get("/static/bootstrap/js/:filename", function(request, response){
-	response.sendfile("static/bootstrap/js/" + request.params.filename);
-});
-
-app.get("/static/lib/:filename", function(request, response){
-	response.sendfile("static/lib/" + request.params.filename);
-});
 
 //Get activity for users or groups
 app.get("/activity", function(request, response){
@@ -248,5 +297,16 @@ app.post("/album", function(request, response){
 
 // console.log("user 8's groups: ", imon.getUserGroups(8));
 // console.log("group 1's members: ", imon.getGroupUsers(1));
+http.createServer(app).listen(app.get('port'), function(){
+  console.log('Express server listening on port ' + app.get('port'));
+});
 
-app.listen(8888);
+// Simple route middleware to ensure user is authenticated.
+//   Use this route middleware on any resource that needs to be protected.  If
+//   the request is authenticated (typically via a persistent login session),
+//   the request will proceed.  Otherwise, the user will be redirected to the
+//   login page.
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.redirect('/login');
+}

@@ -1,45 +1,22 @@
-$(document).ready(function(){
+var wayoControllers = angular.module('wayoControllers', []);
 
-	$('#addNewSongForm').submit(function(event){
-		var songTitle = $("#title-input").val();
-		var songArtist = $("#artist-input").val();
-		var songAlbum = $("#album-input").val();
-		if((songTitle !== null || songTitle !== '') && (songArtist !== null || songArtist !== '')){
-			console.log("Add new song clicked: ", event);
-			handleNewSong({title: songTitle, artist: songArtist, album: songAlbum});
-		}
-		else{
-			console.log("Handle empty string");
-		}
-	});
+wayoControllers.controller('HomeCtrl', ['$scope', '$http',
+	function($scope, $http){
+		$http.get("/users/").success(function(result){
+			console.log(result);
+			$scope.user = result.data;
+		});
 
-
-
-
-	//handleNewSong({title: "Yo Mama", artist: "Yo daddy", album: "Lettuce"});
-
-});
-
-function UserPanelCtrl($scope, $http){
-	$http.get("/users/8").success(function(result){
-		console.log(result);
-		$scope.user = result.data;
-	});
-}
-
-function RecentSongsCtrl($scope, $http){
-	$http.get("/activity", {
-		params: {user_id: 8}}).success(function(result){
-		console.log(result);
-		$scope.songs = result.data;
-	});
-}
-
-function UserGroupsCtrl($scope, $http, $window, $document){
-	$http.get("/groups/8").success(function(result){
-		$scope.groups = result.data;
-		console.log("user group controller: ", $scope.groups);
-	});
+		$http.get("/activity", {
+			params: {user_id: 8}}).success(function(result){
+			console.log(result);
+			$scope.songs = result.data;
+		});
+			
+		$http.get("/groups/8").success(function(result){
+			$scope.groups = result.data;
+			console.log("user group controller: ", $scope.groups);
+		});
 
 
 	$scope.handleNewSong = function($event, song, group){
@@ -77,4 +54,4 @@ function UserGroupsCtrl($scope, $http, $window, $document){
 		artistTarget.value = "";
 		albumTarget.value = "";
 	};
-}
+}]);

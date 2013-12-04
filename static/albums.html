@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" ng-app="wayoApp">
+<html ng-app>
 <head>
 	<meta charset="UTF-8">
-	<title>im.on</title>
+	<title>Albums</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script type="text/javascript" src="lib/angular.min.js"></script>
-	<script type="text/javascript" src="lib/angular-animate.min.js"></script>
-	<script type="text/javascript" src="lib/angular-route.min.js"></script>
-	<script type="text/javascript" src="js/app.js"></script>
-	<script type="text/javascript" src="js/controllers.js"></script>
 	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="style.css">
 	 <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -19,12 +14,16 @@
     <![endif]-->
 </head>
 <body>
-	
-	<div ng-view></div>
-	
-	<script src="https://code.jquery.com/jquery.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-  <script src="bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="imon-client.js"></script>
+<div class="container" ng-controller="AlbumListCtrl">
+	<ul class="list-group">
+	  <li class="list-group-item" ng-repeat="album in albums">{{album}}</li>
+	</ul>
+</div>
+
+<script src="https://code.jquery.com/jquery.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="imon-client.js"></script>
+<script type="text/javascript" src="rest-test.js"></script>
 </body>
 </html>
